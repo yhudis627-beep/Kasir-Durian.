@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#174d32">
+<title>Kasir Durian</title>
+<style>
+:root{--green:#174d32;--green2:#237347;--bg:#f3f6f2;--card:#fff;--ink:#17251b;--muted:#66736a;--line:#e1e8e1;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--green);color:#fff;padding:20px 16px}header .wrap,main{max-width:1050px;margin:auto}h1{margin:0;font-size:24px}header p{margin:5px 0 0;color:#d8eadc}
+main{padding:16px}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:16px}.tabs button{white-space:nowrap}
+button{border:0;border-radius:10px;padding:11px 14px;background:var(--green2);color:#fff;font-weight:650;font-size:14px;cursor:pointer}
+button.secondary{background:#e8eee8;color:var(--green)}button.danger{background:#fff0ef;color:var(--red)}button:disabled{opacity:.45;cursor:not-allowed}
+.tab.active{background:var(--green);color:white}.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:0 2px 8px #173b1b08}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-6{grid-column:span 6}.span-4{grid-column:span 4}
+h2{font-size:18px;margin:0 0 14px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{background:#f6faf6;border-radius:12px;padding:13px}.stat small{display:block;color:var(--muted)}.stat strong{font-size:20px;display:block;margin-top:5px}
+label{display:block;font-size:13px;color:var(--muted);font-weight:600;margin:10px 0 5px}input,select{width:100%;padding:11px;border:1px solid #ccd8cd;border-radius:9px;background:white;font:inherit;color:var(--ink)}
+.row{display:flex;gap:10px;align-items:end}.row>*{flex:1}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-size:12px}td.num,th.num{text-align:right;white-space:nowrap}
+.table-wrap{overflow:auto}.muted{color:var(--muted)}.total{font-size:24px;font-weight:800;color:var(--green)}.notice{padding:10px 12px;background:#eef7ef;border-radius:10px;color:#285b38;font-size:13px;margin-top:10px}
+.empty{text-align:center;color:var(--muted);padding:24px}.hidden{display:none!important}
+@media(max-width:700px){.span-8,.span-6,.span-4{grid-column:span 12}.stats{grid-template-columns:1fr 1fr}.row{display:block}.row>*{margin-bottom:8px}h1{font-size:21px}}
+@media print{header,.tabs,.no-print{display:none!important}body{background:white}.panel{display:none!important}#receiptPrint{display:block!important}.card{border:0;box-shadow:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><h1>🍈 KASIR DURIAN</h1><p>Kasir penjualan • Riwayat transaksi • Laporan omzet</p></div></header>
+<main>
+<div class="tabs no-print">
+<button class="tab active" data-tab="kasir">Kasir</button>
+<button class="tab secondary" data-tab="laporan">Hasil Penjualan</button>
+<button class="tab secondary" data-tab="produk">Daftar Harga</button>
+</div>
+<section id="kasir" class="panel active">
+<div class="grid">
+<div class="card span-8">
+<h2>Transaksi baru</h2>
+<div class="row">
+<div><label for="customer">Nama pelanggan (opsional)</label><input id="customer" placeholder="Pelanggan umum"></div>
+<div><label for="date">Tanggal</label><input id="date" type="date"></div>
+</div>
+<div class="row">
+<div><label for="product">Jenis durian</label><select id="product"></select></div>
+<div><label for="weight">Berat (kg)</label><input id="weight" type="number" min="0.01" step="0.01" placeholder="Contoh: 2.5"></div>
+<div><label for="price">Harga/kg (Rp)</label><input id="price" type="number" min="0" step="500" placeholder="Harga per kg"></div>
+</div>
+<div class="actions"><button id="add">＋ Tambahkan</button><button class="secondary" id="clearCart">Kosongkan keranjang</button></div>
+<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Durian</th><th class="num">Berat</th><th class="num">Harga/kg</th><th class="num">Subtotal</th><th></th></tr></thead><tbody id="cartRows"></tbody></table></div>
+<div id="cartEmpty" class="empty">Keranjang masih kosong.</div>
+</div>
+<div class="card span-4">
+<h2>Pembayaran</h2>
+<label>Total belanja</label><div class="total" id="total">Rp0</div>
+<label for="paid">Uang diterima (Rp)</label><input id="paid" type="number" min="0" step="1000" value="0">
+<label>Kembalian</label><div class="total" id="change">Rp0</div>
+<div class="actions"><button id="checkout" style="width:100%" disabled>Simpan transaksi</button></div>
+<div class="notice">Transaksi tersimpan di perangkat ini. Unduh/cadangkan laporan secara berkala.</div>
+</div>
+</div>
+</section>
+<section id="laporan" class="panel">
+<div class="grid">
+<div class="card span-12">
+<h2>Ringkasan hasil penjualan</h2>
+<div class="row">
+<div><label for="from">Dari tanggal</label><input id="from" type="date"></div>
+<div><label for="to">Sampai tanggal</label><input id="to" type="date"></div>
+<div style="flex:0 0 auto"><button id="filter">Tampilkan</button></div>
+</div>
+<div class="stats" style="margin-top:15px">
+<div class="stat"><small>Omzet</small><strong id="revenue">Rp0</strong></div>
+<div class="stat"><small>Transaksi</small><strong id="count">0</strong></div>
+<div class="stat"><small>Total durian terjual</small><strong id="kg">0 kg</strong></div>
+</div>
+<div class="actions no-print"><button id="csv">Unduh laporan CSV</button><button class="secondary" id="all">Tampilkan semua</button></div>
+</div>
+<div class="card span-12">
+<h2>Riwayat transaksi</h2>
+<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>No. transaksi</th><th>Pelanggan</th><th class="num">Berat</th><th class="num">Total</th><th></th></tr></thead><tbody id="salesRows"></tbody></table></div>
+<div id="salesEmpty" class="empty">Belum ada transaksi pada rentang tanggal ini.</div>
+</div>
+</div>
+</section>
+<section id="produk" class="panel">
+<div class="grid">
+<div class="card span-6">
+<h2>Daftar harga durian</h2>
+<label for="newName">Nama durian</label><input id="newName" placeholder="Contoh: Durian Bawor">
+<label for="newPrice">Harga per kg (Rp)</label><input id="newPrice" type="number" min="0" step="500" placeholder="Contoh: 65000">
+<div class="actions"><button id="saveProduct">Simpan jenis durian</button></div>
+</div>
+<div class="card span-6">
+<h2>Jenis durian tersedia</h2>
+<div class="table-wrap"><table><thead><tr><th>Nama</th><th class="num">Harga/kg</th><th></th></tr></thead><tbody id="productRows"></tbody></table></div>
+</div>
+</div>
+</section>
+<section id="receiptPrint" class="hidden"></section>
+</main>
+<script>
+const KEY='kasirDurianDataV1';
+const defaultProducts=[{name:'Durian Montong',price:50000},{name:'Durian Musang King',price:120000},{name:'Durian Bawor',price:65000},{name:'Durian Lokal',price:30000},{name:'Durian Petruk',price:45000}];
+let data=load(),cart=[],filtered=[];
+function load(){try{return JSON.parse(localStorage.getItem(KEY))||{products:defaultProducts,sales:[]}}catch(e){return {products:defaultProducts,sales:[]}}}
+function save(){localStorage.setItem(KEY,JSON.stringify(data))}
+const $=id=>document.getElementById(id), rupiah=n=>'Rp'+Math.round(n||0).toLocaleString('id-ID');
+function today(){return new Date().toLocaleDateString('en-CA')}
+$('date').value=today();$('from').value=today().slice(0,8)+'01';$('to').value=today();
+function renderProducts(){
+ $('product').innerHTML=data.products.map((p,i)=>`<option value="${i}">${esc(p.name)}</option>`).join('');
+ $('productRows').innerHTML=data.products.map((p,i)=>`<tr><td>${esc(p.name)}</td><td class="num">${rupiah(p.price)}</td><td class="num"><button class="danger" onclick="removeProduct(${i})">Hapus</button></td></tr>`).join('');
+ updatePrice();
+}
+function updatePrice(){let p=data.products[+$('product').value];if(p)$('price').value=p.price}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+$('product').addEventListener('change',updatePrice);
+$('add').onclick=()=>{
+ const p=data.products[+$('product').value],w=+$('weight').value,price=+$('price').value;
+ if(!p||!(w>0)||!(price>=0)){alert('Pilih durian dan isi berat serta harga dengan benar.');return}
+ cart.push({name:p.name,weight:w,price,subtotal:w*price});$('weight').value='';renderCart();
+};
+function renderCart(){
+ $('cartRows').innerHTML=cart.map((x,i)=>`<tr><td>${esc(x.name)}</td><td class="num">${x.weight} kg</td><td class="num">${rupiah(x.price)}</td><td class="num">${rupiah(x.subtotal)}</td><td><button class="danger" onclick="removeCart(${i})">×</button></td></tr>`).join('');
+ $('cartEmpty').classList.toggle('hidden',cart.length>0);
+ let t=cart.reduce((s,x)=>s+x.subtotal,0);$('total').textContent=rupiah(t);updatePayment();
+}
+window.removeCart=i=>{cart.splice(i,1);renderCart()};
+$('clearCart').onclick=()=>{cart=[];renderCart()};
+function updatePayment(){let t=cart.reduce((s,x)=>s+x.subtotal,0),paid=+$('paid').value||0;$('change').textContent=rupiah(Math.max(0,paid-t));$('checkout').disabled=!cart.length||paid<t}
+$('paid').addEventListener('input',updatePayment);
+$('checkout').onclick=()=>{
+ let total=cart.reduce((s,x)=>s+x.subtotal,0),paid=+$('paid').value;
+ if(!cart.length||paid<total)return;
+ let sale={id:'KD-'+Date.now(),date:$('date').value||today(),customer:$('customer').value.trim()||'Umum',items:cart.map(x=>({...x})),total,paid,change:paid-total};
+ data.sales.unshift(sale);save();printReceipt(sale);cart=[];$('paid').value='0';$('customer').value='';renderCart();renderReport();alert('Transaksi berhasil disimpan.');
+};
+function printReceipt(s){
+ $('receiptPrint').innerHTML=`<div style="max-width:360px;margin:20px auto;font:14px monospace"><h2 style="text-align:center">${esc('TOKO DURIAN')}</h2><p>${esc(s.id)}<br>${esc(s.date)}<br>Pelanggan: ${esc(s.customer)}</p><hr>${s.items.map(x=>`<p>${esc(x.name)}<br>${x.weight} kg x ${rupiah(x.price)} = ${rupiah(x.subtotal)}</p>`).join('')}<hr><p>Total: ${rupiah(s.total)}<br>Bayar: ${rupiah(s.paid)}<br>Kembali: ${rupiah(s.change)}</p><p style="text-align:center">Terima kasih</p><button class="no-print" onclick="window.print()">Cetak struk</button></div>`;
+}
+function renderReport(){
+ let from=$('from').value,to=$('to').value;
+ filtered=data.sales.filter(s=>(!from||s.date>=from)&&(!to||s.date<=to));
+ let revenue=filtered.reduce((a,s)=>a+s.total,0),kg=filtered.reduce((a,s)=>a+s.items.reduce((b,x)=>b+x.weight,0),0);
+ $('revenue').textContent=rupiah(revenue);$('count').textContent=filtered.length;$('kg').textContent=kg.toLocaleString('id-ID')+' kg';
+ $('salesRows').innerHTML=filtered.map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(s.id)}</td><td>${esc(s.customer)}</td><td class="num">${s.items.reduce((a,x)=>a+x.weight,0)} kg</td><td class="num">${rupiah(s.total)}</td><td class="num"><button class="secondary" onclick="showSale('${s.id}')">Detail</button></td></tr>`).join('');
+ $('salesEmpty').classList.toggle('hidden',filtered.length>0);
+}
+window.showSale=id=>{let s=data.sales.find(x=>x.id===id);if(s){printReceipt(s);window.print()}};
+$('filter').onclick=renderReport;$('all').onclick=()=>{$('from').value='';$('to').value='';renderReport()};
+$('saveProduct').onclick=()=>{let name=$('newName').value.trim(),price=+$('newPrice').value;if(!name||!(price>=0)){alert('Isi nama dan harga dengan benar.');return}data.products.push({name,price});save();$('newName').value='';$('newPrice').value='';renderProducts()};
+window.removeProduct=i=>{if(confirm('Hapus jenis durian ini dari daftar?')){data.products.splice(i,1);save();renderProducts()}};
+$('csv').onclick=()=>{
+ let rows=[['Tanggal','No Transaksi','Pelanggan','Jenis Durian','Berat Kg','Harga per Kg','Subtotal','Total Transaksi','Uang Diterima','Kembalian']];
+ filtered.forEach(s=>s.items.forEach(x=>rows.push([s.date,s.id,s.customer,x.name,x.weight,x.price,x.subtotal,s.total,s.paid,s.change])));
+ let csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+ let a=document.createElement('a'),url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.href=url;a.download='laporan-penjualan-durian.csv';a.click();URL.revokeObjectURL(url);
+};
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>{x.classList.remove('active');x.classList.add('secondary')});b.classList.add('active');b.classList.remove('secondary');document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));$(b.dataset.tab).classList.add('active');if(b.dataset.tab==='laporan')renderReport()});
+renderProducts();renderCart();renderReport();
+</script>
+</body></html>
